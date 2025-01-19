@@ -1,0 +1,17 @@
+main-app-service/venv/
+main-app-service/__pycache__/
+main-app-service/.idea/
+
+
+docker-compose.yml
+docker-compose_v1.yml
+shared/
+rabbitmq/
+
+
+consumer-uploader-service/.idea/
+consumer-uploader-service/venv/
+consumer-uploader-service/.git
+consumer-uploader-service/test.py
+consumer-uploader-service/paths.py
+consumer-uploader-service/__pycache__/

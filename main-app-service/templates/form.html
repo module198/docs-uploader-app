@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form</title>
+    <!-- Подключение CSS с использованием url_for для Flask -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Подключение jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Подключение JS с использованием url_for для Flask -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+
+<body class="dark"> <!-- Устанавливаем класс dark по умолчанию -->
+    <!-- Форма -->
+    <div id="form" class="form-wrapper">
+        <!-- Новый блок для логина и кнопки -->
+        <div class="user-info">
+            <span>Logged in as: {{ email }}</span>
+            <button onclick="window.location.href='/logout'">Logout</button>
+        </div>
+
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <label class="dropdown">
+                <span>Пациент:</span>
+                <div class="input-wrapper">
+                    <select name="patient" id="patient" required>
+                        {% for patient in patients %}
+                            <option value="{{ patient }}">{{ patient }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </label>
+
+            <label class="dropdown">
+                <span>Тип события:</span>
+                <div class="input-wrapper">
+                    <select name="subject" id="subject" required>
+                        <option value="Посещение врача">Посещение врача</option>
+                        <option value="Анализы">Анализы</option>
+                    </select>
+                </div>
+            </label>
+
+            <label class="text">
+                <span>Дата события:</span>
+                <div class="input-wrapper">
+                    <input type="date" name="eventDate" id="eventDate" required>
+                </div>
+            </label>
+
+            <label class="text">
+                <span>Клиника:</span>
+                <div class="input-wrapper">
+                    <input type="text" name="clinic" id="clinic" required>
+                </div>
+            </label>
+
+            <label class="text">
+                <span>Специализация врача:</span>
+                <div class="input-wrapper">
+                    <input type="text" name="doctorSpec" id="doctorSpec">
+                </div>
+            </label>
+
+            <label class="text">
+                <span>ФИО врача:</span>
+                <div class="input-wrapper">
+                    <input type="text" name="doctorName" id="doctorName">
+                </div>
+            </label>
+
+            <label class="text">
+                <span>Жалоба:</span>
+                <div class="input-wrapper">
+                    <input type="text" name="diagnosis" id="diagnosis">
+                </div>
+            </label>
+
+            <label class="text">
+                <span>Комментарий:</span>
+                <div class="input-wrapper">
+                    <textarea name="comment" id="comment" rows="3"></textarea>
+                </div>
+            </label>
+
+            <label class="multiple">
+                <span>Выберите файлы:</span>
+                <div class="input-wrapper">
+                    <input type="file" name="file" id="file" multiple required>
+                </div>
+            </label>
+
+            <div class="input-wrapper">
+                <button type="submit">Загрузить</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="clear"></div>
+    <span class="notes">* Поля обязательны для заполнения.</span>
+</body>
+</html>
