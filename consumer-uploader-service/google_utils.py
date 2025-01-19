@@ -1,6 +1,6 @@
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from utils import *  # Импортируем функцию из utils.py
+from utils import *  # Импортируем функции из utils.py
 from googleapiclient.errors import HttpError
 
 def files_uploading(form_data):
@@ -24,9 +24,8 @@ def files_uploading(form_data):
                         f'{file.get("fileName")}',
                 'parents': [drive_structure.get("yearFolderId")]  # ID папки
             }
-            ######Допилить temp_filepath
-            # temp_filepath = f'../shared/uploads/{username}/{file.get("fileName")}'
             temp_filepath = f'{UPLOAD_FOLDER}/{username}/{file.get("fileName")}'
+            logger.info(f'Uploading of {file.get("fileName")} started')
             media = MediaFileUpload(temp_filepath, mimetype='application/octet-stream')
             drive_response = drive_service.files().create(
                 body=file_metadata,
@@ -35,6 +34,7 @@ def files_uploading(form_data):
             ).execute()
             #Получение fileID на гугл диске
             file_id = drive_response['id']
+            logger.info(f'Upload of {file.get("fileName")} completed')
 
             # Делаем файл доступным для всех с ссылкой
             permission = {
@@ -56,7 +56,7 @@ def files_uploading(form_data):
             # update_or_create_sheet(drive_structure.get('sheetId'), form_data.get("category"), form_data, credentials)
 
     except Exception as e:
-        print(f'Error uploading file {e}')
+        logger.exception(f'Error uploading file: {e}')
 
 
 def initialize_folder_structure(drive_service, category, patient, year):
@@ -124,7 +124,7 @@ def find_or_create_sheet(drive_service, folder_id, sheet_name="documents list"):
             file = drive_service.files().create(body=file_metadata, fields='id').execute()
             return file['id']
         except HttpError as error:
-            print(f"Error creating spreadsheet '{sheet_name}': {error}")
+            logger.exception(f"Error creating spreadsheet '{sheet_name}': {error}")
             return None
 
 
@@ -148,5 +148,5 @@ def find_or_create_folder(drive_service, folder_name, parent_folder_id='root'):
             folder = drive_service.files().create(body=folder_metadata, fields='id').execute()
             return folder['id']
         except HttpError as error:
-            print(f"Error creating folder '{folder_name}': {error}")
+            logger.exception(f"Error creating folder '{folder_name}': {error}")
             return None

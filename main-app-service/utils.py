@@ -1,6 +1,17 @@
 import requests, json
 from google.oauth2.credentials import Credentials
 import os
+from dotenv import load_dotenv
+import logging
+
+'''
+Пример логгирования:
+logging.debug('Это сообщение уровня DEBUG')
+logging.info('Это сообщение уровня INFO')
+logging.warning('Это сообщение уровня WARNING')
+logging.error('Это сообщение уровня ERROR')
+logging.critical('Это сообщение уровня CRITICAL')
+'''
 
 SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly',
           'https://www.googleapis.com/auth/userinfo.email',
@@ -14,12 +25,30 @@ BASE_DIR = os.getenv("BASE_DIR", os.path.abspath(os.path.dirname(__file__)))
 # SHARED_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', 'shared'))
 SHARED_DIR = os.getenv("SHARED_DIR", os.path.abspath(os.path.join(BASE_DIR, '..', 'shared')))
 # Путь к логам
-# LOG_PATH = os.path.join(SHARED_DIR, 'logs', 'app.log')
+LOG_PATH = os.path.join(SHARED_DIR, 'logs', 'app.log')
 # Путь к файлу с секретами
 CLIENT_SECRETS_FILE = os.path.join(SHARED_DIR, 'creds', 'client_secret.json')
+# Путь к .env файлу внутри папки creds
+dotenv_path = os.path.join(SHARED_DIR, 'creds', '.env')
 # Путь к папке для временного хранилища файлов для загрузки
 UPLOAD_FOLDER = os.path.join(SHARED_DIR, 'uploads')
 
+# Загрузить переменные из .env
+load_dotenv(dotenv_path)
+rabbit_user = os.getenv('RABBITMQ_USER')
+rabbit_pass = os.getenv('RABBITMQ_PASS')
+rabbit_host = os.getenv('RABBITMQ_HOST')
+
+# Настройка конфигурации логирования
+logging.basicConfig(
+    level=logging.ERROR,  # Уровень логирования (можно выбрать: DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Формат сообщения
+    handlers=[
+        logging.StreamHandler(),  # Вывод логов в консоль
+        logging.FileHandler(LOG_PATH)  # Запись логов в файл 'app.log'
+    ]
+)
+logger = logging.getLogger('main-app-service')
 
 
 # Функция для получения данных пользователя через Google People API
@@ -35,7 +64,7 @@ def get_user_info(access_token) -> str:
         email = user_data.get('email', '')
         return email
     else:
-        print(f"Error getting user email: {response.status_code}")
+        logger.error(f"Error getting user email: {response.status_code}")
         return None, None
 
 
@@ -43,7 +72,6 @@ def get_user_info(access_token) -> str:
 class UserAccount:
     def __init__(self, email):
         self.email = email
-        # self.credentials_file = "../shared/creds/tokens.json"
         self.credentials_file = os.path.join(SHARED_DIR, 'creds', 'tokens.json')
         self.credentials = self.load_credentials()
 

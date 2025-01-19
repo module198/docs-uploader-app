@@ -6,26 +6,6 @@ import time
 from datetime import datetime
 from rabbit_publish import Publisher
 import json
-# import logging
-
-'''
-Пример логгирования:
-logging.debug('Это сообщение уровня DEBUG')
-logging.info('Это сообщение уровня INFO')
-logging.warning('Это сообщение уровня WARNING')
-logging.error('Это сообщение уровня ERROR')
-logging.critical('Это сообщение уровня CRITICAL')
-'''
-
-# # Настройка конфигурации логирования
-# logging.basicConfig(
-#     level=logging.ERROR,  # Уровень логирования (можно выбрать: DEBUG, INFO, WARNING, ERROR, CRITICAL)
-#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Формат сообщения
-#     handlers=[
-#         logging.StreamHandler(),  # Вывод логов в консоль
-#         logging.FileHandler(LOG_PATH)  # Запись логов в файл 'app.log'
-#     ]
-# )
 
 app = Flask(__name__)
 # Note: A secret key is included in the sample so that it works.
@@ -95,7 +75,6 @@ def oauth2callback():
 
     session['email'], session["credentials"] = user_account.email, user_account.credentials_to_dict()
 
-    print(session)
     return flask.redirect('/form')
 
 @app.route('/form')
@@ -108,7 +87,6 @@ def form():
         return render_template('form.html', email=user_account.email, patients=patients)
     else:
         # Если пользователь не авторизован, перенаправляем на страницу логина
-        print("Нужно пройти авторизацию")
         return redirect(url_for('login'))
 
 
@@ -163,7 +141,6 @@ def upload():
 
 
     form_data["attachedFiles"] = attached_files
-    print(f"Collected form data: {form_data}")  # Для отладки
 
     try:
 
@@ -171,10 +148,15 @@ def upload():
         publisher = Publisher()
         publisher.send_message(json.dumps(form_data))
         publisher.close()
+        # Логирование успешной публикации
+        logger.info('Message sent successfully to RabbitMQ with data: %s', form_data)
 
         flash('Files sent successfully!', 'success')
 
     except Exception as e:
+        # Логирование ошибки
+        logger.exception('Failed to send message to RabbitMQ: %s', str(e))
+
         flash('Something went wrong, please try later!', 'failure')
 
     return redirect(url_for('form'))
@@ -186,9 +168,12 @@ def logout():
     if user_account.revoke_token() or user_account.refresh_token():
         # Чистим сессию и редиректим
         session.clear()
+        logger.info('Credentials successfully revoked.: %s', user_account)
         flash('Credentials successfully revoked.')
         return render_template('redirect_with_delay.html')
     else:
+        # Логирование ошибки
+        logger.info('Failed to revoke credentials.: %s', user_account)
         return 'Failed to revoke credentials.'
 
 
