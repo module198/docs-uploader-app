@@ -5,6 +5,7 @@ class Publisher:
     def __init__(self, exchange_name='documentInfo'):
         # Открываем соединение
         rabbitCredentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+        logger.info('Connecting to RabbitMQ: {}'.format(rabbit_host), rabbit_user, rabbit_pass)
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(rabbit_host,
                                                                             5672,
                                                                             '/', rabbitCredentials))

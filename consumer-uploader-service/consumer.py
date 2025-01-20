@@ -22,6 +22,7 @@ class Consumer:
         while attempt < max_attempts:
             try:
                 rabbit_credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+                logger.info('Connecting to RabbitMQ: {}'.format(rabbit_host), rabbit_user, rabbit_pass)
                 self.connection = pika.BlockingConnection(
                     pika.ConnectionParameters(rabbit_host, 5672, '/', rabbit_credentials)
                 )

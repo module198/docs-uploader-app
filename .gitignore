@@ -3,10 +3,11 @@ main-app-service/__pycache__/
 main-app-service/.idea/
 
 
-docker-compose.yml
-docker-compose_v1.yml
 shared/
-rabbitmq/
+rabbit/
+.env
+temp/
+.git
 
 
 consumer-uploader-service/.idea/

@@ -13,7 +13,8 @@ LOG_PATH = os.path.join(SHARED_DIR, 'logs', 'app.log')
 # Путь к файлу с секретами
 CLIENT_SECRETS_FILE = os.path.join(SHARED_DIR, 'creds', 'client_secret.json')
 # Путь к .env файлу внутри папки creds
-dotenv_path = os.path.join(SHARED_DIR, 'creds', '.env')
+# dotenv_path = os.path.join(BASE_DIR, '..', '.env')
+dotenv_path = '/app/.env'
 # Путь к папке для временного хранилища файлов для загрузки
 UPLOAD_FOLDER = os.path.join(SHARED_DIR, 'uploads')
 
