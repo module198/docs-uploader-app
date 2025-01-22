@@ -1,6 +1,9 @@
 # Используем официальный образ Python 3.12
 FROM python:3.12-slim
 
+# Установка утилит iproute2 и iptables для Debian, если нужно
+#RUN apt-get update && apt-get install -y iputils-ping iproute2 iptables sudo
+
 # Устанавливаем рабочую директорию в контейнере
 WORKDIR /app
 

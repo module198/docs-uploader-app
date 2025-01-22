@@ -132,8 +132,6 @@ class UserAccount:
 
             if response.status_code == 200:
                 new_credentials = response.json()
-                # self.credentials.token = new_credentials['access_token']
-                # self.credentials.refresh_token = new_credentials.get('refresh_token')
                 # Создаем новый объект Credentials с обновлёнными токенами
                 self.credentials = Credentials(
                     token=new_credentials['access_token'],

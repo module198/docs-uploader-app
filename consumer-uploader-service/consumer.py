@@ -27,7 +27,7 @@ class Consumer:
                     pika.ConnectionParameters(rabbit_host, 5672, '/', rabbit_credentials)
                 )
                 self.channel = self.connection.channel()
-                print("Connected to RabbitMQ")
+                logger.info('Connected to RabbitMQ: {}'.format(rabbit_host))
                 # Объявляем exchange
                 self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='fanout')
                 # Создаём очередь
