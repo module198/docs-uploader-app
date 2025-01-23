@@ -43,7 +43,7 @@ environment = os.getenv('ENVIRONMENT')
 
 # Настройка конфигурации логирования
 logging.basicConfig(
-    level=logging.ERROR,  # Уровень логирования (можно выбрать: DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    level=logging.INFO,  # Уровень логирования (можно выбрать: DEBUG, INFO, WARNING, ERROR, CRITICAL)
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Формат сообщения
     handlers=[
         logging.StreamHandler(),  # Вывод логов в консоль

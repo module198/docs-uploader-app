@@ -63,6 +63,8 @@ def files_uploading(form_data):
                                form_data,
                                user_account.credentials)
 
+        delete_files_in_directory(f'{UPLOAD_FOLDER}/{username}')
+
     except Exception as e:
         logger.exception(f'Error uploading file: {e}')
 
@@ -270,7 +272,7 @@ def update_or_create_sheet(sheet_id, data_sheet, credentials):
                 insertDataOption="INSERT_ROWS"  # Вставить новую строку
             ).execute()
 
-        logger.info(f"Данные были добавлены в лист '{category}'.")
+        logger.info(f"Данные были добавлены в Google sheets на лист '{category}'.")
 
     except HttpError as err:
         logger.exception(f"Ошибка работы с Google Sheets: {err}")
@@ -279,59 +281,61 @@ def update_or_create_sheet(sheet_id, data_sheet, credentials):
 def add_data_to_backup_json(drive_service, file_id, data):
     """
     Добавляет данные в файл JSON на Google Drive. Если файл пустой, записываются данные.
-    Если файл не пустой, данные добавляются в конец.
+    Если файл не пустой, данные добавляются к существующему содержимому.
 
     :param drive_service: Сервис для работы с Google Drive API.
     :param file_id: ID файла на Google Drive.
     :param data: Данные для добавления в файл JSON (в виде словаря).
-    :return: None
     """
     try:
-        # Попытка скачать содержимое файла JSON с Google Drive
+        # Скачиваем содержимое файла
         request = drive_service.files().get_media(fileId=file_id)
         fh = io.BytesIO()
         downloader = MediaIoBaseDownload(fh, request)
-        done = False
 
+        done = False
         while not done:
             status, done = downloader.next_chunk()
 
-        # Загружаем содержимое файла
         fh.seek(0)
         file_content = fh.read().decode("utf-8")
 
-        # Если файл не пустой, добавляем данные в конец
-        if file_content:
-            json_data = json.loads(file_content)
-            if not isinstance(json_data, list):
-                json_data = []  # Приводим структуру данных к списку, если она не является списком
-            json_data.append(data)
+        # Обработка содержимого файла
+        if file_content.strip():
+            try:
+                json_data = json.loads(file_content)
+            except json.JSONDecodeError:
+                logger.exception("Ошибка декодирования JSON. Бэкап JSONФайл будет перезаписан.")
+                json_data = []
         else:
-            # Если файл пустой, создаем новый список с данными
-            json_data = [data]
+            json_data = []
+
+        # Добавляем новые данные
+        if not isinstance(json_data, list):
+            json_data = [json_data]
+        json_data.append(data)
 
     except HttpError as e:
-        # Если файл не существует или не может быть прочитан
-        print(f"Ошибка при чтении файла: {e}")
-        # Создаем новый список с данными в случае ошибки
-        json_data = [data]
+        logger.error(f"Ошибка при чтении бэкап JSON файла: {e}")
+        json_data = [data]  # В случае ошибки создаем новый JSON с переданными данными
 
     except Exception as e:
-        # Ловим другие ошибки
-        print(f"Ошибка при чтении файла: {e}")
-        # В случае ошибок создаем новый файл с данными
-        json_data = [data]
+        logger.exception(f"Ошибка: {e}")
+        json_data = [data]  # Перезаписываем содержимое в случае других ошибок
 
-    # Сохраняем обновленный файл обратно на Google Drive
-    file_metadata = {'name': 'backup_data.json'}  # Имя файла можно оставить или изменить
-    media = MediaIoBaseUpload(io.BytesIO(json.dumps(json_data).encode('utf-8')), mimetype='application/json')
-
+    # Записываем обновленные данные обратно в файл
     try:
-        # Обновляем файл на Google Drive
-        drive_service.files().update(fileId=file_id, body=file_metadata, media_body=media).execute()
-        print(f"Данные успешно добавлены в файл с ID {file_id}")
+        updated_content = io.BytesIO(json.dumps(json_data, ensure_ascii=False).encode('utf-8'))
+        media = MediaIoBaseUpload(updated_content, mimetype='application/json')
+        drive_service.files().update(
+            fileId=file_id,
+            media_body=media
+        ).execute()
+
+        logger.info(f"Данные успешно добавлены в бэкап JSON файл с ID {file_id}")
+
     except HttpError as e:
-        print(f"Ошибка при обновлении файла на Google Drive: {e}")
+        logger.exception(f"Ошибка при обновлении бэкап JSON файла на Google Drive: {e}")
     except Exception as e:
-        print(f"Ошибка при обновлении файла: {e}")
+        logger.exception(f"Ошибка при сохранении бэкап JSON файла: {e}")
 

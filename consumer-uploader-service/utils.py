@@ -26,7 +26,7 @@ rabbit_host = os.getenv('RABBITMQ_HOST')
 
 # Настройка конфигурации логирования
 logging.basicConfig(
-    level=logging.ERROR,  # Уровень логирования (можно выбрать: DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    level=logging.INFO,  # Уровень логирования (можно выбрать: DEBUG, INFO, WARNING, ERROR, CRITICAL)
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Формат сообщения
     handlers=[
         logging.StreamHandler(),  # Вывод логов в консоль
@@ -165,3 +165,30 @@ class UserAccount:
             self.credentials = None  # Убираем токены из объекта
             return True
         return False
+
+
+def delete_files_in_directory(directory_path):
+    """
+    Удаляет все файлы в указанной директории. Поддиректории не удаляются.
+
+    :param directory_path: Путь к директории, в которой нужно удалить все файлы.
+    :return: None
+    """
+    try:
+        # Проверяем, существует ли указанная директория
+        if not os.path.exists(directory_path):
+            logger.warning(f"Директория {directory_path} не существует.")
+            return
+
+        # Перебираем все файлы в директории
+        for filename in os.listdir(directory_path):
+            file_path = os.path.join(directory_path, filename)
+            # Проверяем, является ли объект файлом
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+                logger.info(f"Файл {filename} был удален из временного хранилища.")
+            else:
+                logger.warning(f"{filename} не является файлом, пропущено.")
+
+    except Exception as e:
+        logger.exception(f"Ошибка при удалении файлов из временного хранилища: {e}")

@@ -152,7 +152,7 @@ def upload():
 
         # Публикация в RabbitMQ
         publisher = Publisher()
-        publisher.send_message(json.dumps(form_data))
+        publisher.send_message(json.dumps(form_data,ensure_ascii=False))
         publisher.close()
         # Логирование успешной публикации
         logger.info('Message sent successfully to RabbitMQ with data: %s', form_data)
