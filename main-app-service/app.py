@@ -90,7 +90,12 @@ def form():
     if user_account.is_token_valid() or user_account.refresh_token():
         # Если пользователь авторизован, перенаправляем на форму проверяем токен
         patients = ["Олег", "Оля", "Милана"]
-        return render_template('form.html', email=user_account.email, patients=patients)
+        subjects = ["Посещение врача", "Анализы", "Покупки/затраты", "Справки"]
+        cities = ["Санкт-Петербург", "Москва", "Нижний Новгород", "Бор"]
+        return render_template('form_test.html', email=user_account.email,
+                               patients=patients,
+                               subjects=subjects,
+                               cities=cities)
     else:
         # Если пользователь не авторизован, перенаправляем на страницу логина
         return redirect(url_for('login'))

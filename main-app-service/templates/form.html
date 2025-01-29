@@ -36,9 +36,10 @@
             <label class="dropdown">
                 <span>Тип события:</span>
                 <div class="input-wrapper">
-                    <select name="subject" id="subject" required>
-                        <option value="Посещение врача">Посещение врача</option>
-                        <option value="Анализы">Анализы</option>
+                    <select name="patient" id="patient" required>
+                        {% for subject in subjects %}
+                            <option value="{{ subject }}">{{ subject }}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </label>

@@ -1,0 +1,291 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+            background-color: #f4f4f4;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .menu-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .menu-section + .menu-section {
+            margin-top: 20px;
+        }
+
+        .menu-button {
+            padding: 10px;
+            background-color: #e0e0e0;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .menu-button:hover {
+            background-color: #d0d0d0;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout {
+            margin-left: 10px;
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .main-form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-row label {
+            font-weight: bold;
+        }
+
+        .form-row input, .form-row select, .form-row textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .attachment-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .attachment-preview {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .attachment-preview div {
+            width: 50px;
+            height: 50px;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .attachment-button {
+            cursor: pointer;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            text-align: center;
+            width: 50px;
+            height: 50px;
+        }
+
+        .submit-button {
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                flex-direction: row;
+            }
+
+            .sidebar {
+                width: 20%;
+                height: 100%;
+                padding: 20px;
+            }
+
+            .menu-section {
+                gap: 10px;
+            }
+
+            .content {
+                flex: 1;
+                padding: 20px;
+            }
+
+            .header {
+                flex-direction: row;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .sidebar {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="menu-section">
+            <button class="menu-button" onclick="loadFrame('Медицина')">Медицина</button>
+            <button class="menu-button" onclick="loadFrame('Имущество')">Имущество</button>
+            <button class="menu-button" onclick="loadFrame('Базовые')">Базовые</button>
+            <button class="menu-button" onclick="loadFrame('Разное')">Разное</button>
+        </div>
+        <div class="menu-section">
+            <button class="menu-button">Работа со справочниками</button>
+            <button class="menu-button">Func2</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="header">
+            <div>{{ email }}</div>
+            <a href="/logout" class="logout">Logout</a>
+        </div>
+
+   <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="main-form">
+                <div class="form-row">
+                    <label for="patient">Пациент</label>
+                    <select name="patient" id="patient" required>
+                        {% for patient in patients %}
+                            <option value="{{ patient }}">{{ patient }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="event-type">Тип события/документа</label>
+                    <select name="subject" id="subject" required>
+                        {% for subject in subjects %}
+                            <option value="{{ subject }}">{{ subject }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="event-date">Дата события</label>
+                    <input type="date" name="eventDate" id="eventDate" required>
+                </div>
+
+                <div class="form-row">
+                    <label for="city">Город</label>
+                    <select name="city" id="city" required>
+                        {% for city in cities %}
+                            <option value="{{ city }}">{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="clinic">Клиника / Организация</label>
+                    <input type="text" name="clinic" id="clinic">
+                </div>
+
+                <div class="form-row">
+                    <label for="doctorSpec">Специализация врача:</label>
+                    <input type="text" name="doctorSpec" id="doctorSpec">
+                </div>
+
+                <div class="form-row">
+                    <label for="doctorName">ФИО врача</label>
+                    <input type="text" name="doctorName" id="doctorName">
+                </div>
+
+                <div class="form-row">
+                    <label for="diagnosis">Жалоба</label>
+                    <input type="text" name="diagnosis" id="diagnosis">
+                </div>
+
+                <div class="form-row">
+                    <label for="comment">Комментарий</label>
+                    <textarea id="comment" name="comment" rows="3" placeholder="Input description"></textarea>
+                </div>
+
+                <div class="attachment-section">
+                    <div class="attachment-preview" id="attachment-preview"></div>
+                    <label class="attachment-button">
+                        +
+                        <input type="file" name="file" id="file" multiple style="display: none;" onchange="handleFileUpload(event)">
+                    </label>
+                </div>
+
+                <button class="submit-button" type="submit">Загрузить</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function loadFrame(category) {
+            alert(`Load content for: ${category}`);
+        }
+
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            const preview = document.getElementById('attachment-preview');
+            preview.innerHTML = '';
+
+            for (let file of files) {
+                const div = document.createElement('div');
+                div.textContent = file.name;
+                preview.appendChild(div);
+            }
+        }
+    </script>
+</body>
+</html>
