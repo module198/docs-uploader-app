@@ -92,7 +92,17 @@ def form():
         patients = ["Олег", "Оля", "Милана"]
         subjects = ["Посещение врача", "Анализы", "Покупки/затраты", "Справки"]
         cities = ["Санкт-Петербург", "Москва", "Нижний Новгород", "Бор"]
-        return render_template('form_test.html', email=user_account.email,
+
+        # Определяем, с какого устройства зашёл пользователь
+        user_agent = request.user_agent.string.lower()
+        if any(keyword in user_agent for keyword in ("mobile", "android", "iphone")):
+            return render_template('form.html', email=user_account.email,
+                                   patients=patients,
+                                   subjects=subjects,
+                                   cities=cities)
+
+        else:
+            return render_template('form_test.html', email=user_account.email,
                                patients=patients,
                                subjects=subjects,
                                cities=cities)
