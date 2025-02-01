@@ -186,6 +186,16 @@ def upload():
 @app.route("/logout")
 def logout():
     user_account = UserAccount(session.get('email'))
+    # Чистим сессию и редиректим
+    session.clear()
+    logger.info('Successfully logged out.: %s', user_account)
+    flash('You successfully logged out.')
+    return render_template('redirect_with_delay.html')
+
+
+@app.route("/revoke")
+def revoke():
+    user_account = UserAccount(session.get('email'))
     if user_account.revoke_token() or user_account.refresh_token():
         # Чистим сессию и редиректим
         session.clear()

@@ -193,7 +193,6 @@ def update_or_create_sheet(sheet_id, data_sheet, credentials):
     Также добавляется уникальный 'record_id', который увеличивается только для новой записи, если уже есть существующие.
 
     :param sheet_id: ID Google Sheets документа.
-    :param category: Название листа, которое нужно проверить или создать.
     :param data_sheet: Данные в виде JSON, которые нужно добавить в таблицу.
     :param credentials: Учетные данные для Google API.
     :return: None
@@ -212,12 +211,12 @@ def update_or_create_sheet(sheet_id, data_sheet, credentials):
             # Если лист не найден, создаем его
             sheets_service.spreadsheets().batchUpdate(
                 spreadsheetId=sheet_id,
-                body={ "requests": [{"addSheet": {"properties": {"title": category}}}] }
+                body={"requests": [{"addSheet": {"properties": {"title": category}}}]}
             ).execute()
             logger.info(f"Лист '{category}' был создан.")
 
         # Получаем данные из существующего или только что созданного листа
-        range_ = f'{category}!A1:Z100000'
+        range_ = f'{category}!A:A'  # Запрашиваем только первую колонку (record_id)
         result = sheets_service.spreadsheets().values().get(spreadsheetId=sheet_id, range=range_).execute()
         existing_values = result.get('values', [])
 
@@ -229,7 +228,7 @@ def update_or_create_sheet(sheet_id, data_sheet, credentials):
             headers.extend(file_headers)
 
         # Если лист пустой, записываем заголовки в первую строку
-        if not existing_values:
+        if not existing_values or len(existing_values) == 1:  # Если только заголовки или вообще пусто
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
                 range=f'{category}!A1',
@@ -239,8 +238,11 @@ def update_or_create_sheet(sheet_id, data_sheet, credentials):
             logger.info(f"Заголовки были записаны в лист '{category}'.")
             last_record_id = 0  # Начинаем с 0, потому что будем смотреть на последний записанный record_id
         else:
-            # Если записи уже есть, находим последний record_id
-            record_ids = [int(row[0]) for row in existing_values if row[0].isdigit()]
+            # Читаем все существующие record_id из первой колонки (A)
+            record_ids = [
+                int(row[0]) for row in existing_values[1:]  # Пропускаем заголовки (первая строка)
+                if row and row[0].isdigit()  # Проверяем, что значение есть и это число
+            ]
             last_record_id = max(record_ids) if record_ids else 0  # Находим максимальный record_id
 
         # Теперь работаем с файлами и основной информацией
@@ -272,7 +274,7 @@ def update_or_create_sheet(sheet_id, data_sheet, credentials):
                 insertDataOption="INSERT_ROWS"  # Вставить новую строку
             ).execute()
 
-        logger.info(f"Данные были добавлены в Google sheets на лист '{category}'.")
+        logger.info(f"Данные были добавлены в Google Sheets на лист '{category}'.")
 
     except HttpError as err:
         logger.exception(f"Ошибка работы с Google Sheets: {err}")
