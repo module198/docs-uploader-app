@@ -181,7 +181,7 @@
 <body>
     <div class="sidebar">
         <div class="menu-section">
-            <button class="menu-button" onclick="loadFrame('Медицина')">Медицина</button>
+            <button class="menu-button" onclick="redirectToForm()">Медицина</button>
             <button class="menu-button" onclick="loadFrame('Имущество')">Имущество</button>
             <button class="menu-button" onclick="loadFrame('Базовые')">Базовые</button>
             <button class="menu-button" onclick="loadFrame('Разное')">Разное</button>
@@ -289,6 +289,10 @@
 
         function redirectToDictionaries() {
             window.location.href = '/dictionaries';
+        }
+
+        function redirectToForm() {
+            window.location.href = '/form';
         }
     </script>
 </body>
