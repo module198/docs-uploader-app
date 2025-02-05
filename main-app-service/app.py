@@ -89,23 +89,24 @@ def form():
     user_account = UserAccount(session.get('email'))
     if user_account.is_token_valid() or user_account.refresh_token():
         # Если пользователь авторизован, перенаправляем на форму проверяем токен
-        patients = ["Олег", "Оля", "Милана"]
-        subjects = ["Посещение врача", "Анализы", "Покупки/затраты", "Справки"]
-        cities = ["Санкт-Петербург", "Москва", "Нижний Новгород", "Бор"]
+        dictionaries = user_account.load_dictionaries()
+        patients = dictionaries.get('patients')
+        subjects = dictionaries.get('subjects')
+        cities = dictionaries.get('cities')
 
         # Определяем, с какого устройства зашёл пользователь
         user_agent = request.user_agent.string.lower()
         if any(keyword in user_agent for keyword in ("mobile", "android", "iphone")):
-            return render_template('form.html', email=user_account.email,
+            return render_template('form_mobile.html', email=user_account.email,
                                    patients=patients,
                                    subjects=subjects,
                                    cities=cities)
 
         else:
-            return render_template('form_test.html', email=user_account.email,
-                               patients=patients,
-                               subjects=subjects,
-                               cities=cities)
+            return render_template('form_pc.html', email=user_account.email,
+                                   patients=patients,
+                                   subjects=subjects,
+                                   cities=cities)
     else:
         # Если пользователь не авторизован, перенаправляем на страницу логина
         return redirect(url_for('login'))
@@ -130,7 +131,7 @@ def upload():
         "eventDate": datetime.strptime(request.form.get("eventDate"), '%Y-%m-%d').strftime('%d.%m.%Y')
                   if request.form.get("eventDate") else None,  # Преобразуем и присваиваем дату
         "patient": request.form.get("patient"),
-        "city": "Санкт-Петербург",  # По умолчанию
+        "city": request.form.get("city"),
         "clinic": request.form.get("clinic"),
         "doctorSpec": request.form.get("doctorSpec"),
         "doctorName": request.form.get("doctorName"),
@@ -206,6 +207,88 @@ def revoke():
         # Логирование ошибки
         logger.info('Failed to revoke credentials.: %s', user_account)
         return 'Failed to revoke credentials.'
+
+
+@app.route('/dictionaries')
+def dictionaries():
+    # Проверяем наличие и валидность токена авторизации
+    user_account = UserAccount(session.get('email'))
+    if user_account.is_token_valid() or user_account.refresh_token():
+        # Если пользователь авторизован, перенаправляем на форму проверяем токен
+        dictionaries = user_account.load_dictionaries()
+        patients = dictionaries.get('patients', [])
+        subjects = dictionaries.get('subjects', [])
+        cities = dictionaries.get('cities', [])
+
+        # Определяем, с какого устройства зашёл пользователь
+        user_agent = request.user_agent.string.lower()
+        if any(keyword in user_agent for keyword in ("mobile", "android", "iphone")):
+            return render_template('dictionaries_mobile.html',
+                                   email=user_account.email,
+                                   patients=patients,
+                                   subjects=subjects,
+                                   cities=cities)
+
+        else:
+            return render_template('dictionaries_pc.html',
+                                   email=user_account.email,
+                                   patients=patients,
+                                   subjects=subjects,
+                                   cities=cities)
+    else:
+        # Если пользователь не авторизован, перенаправляем на страницу логина
+        return redirect(url_for('login'))
+
+
+@app.route('/save_dictionaries_to_file', methods=['POST'])
+def save_dictionaries_to_file():
+    """Обрабатывает данные формы и сохраняет их в справочники."""
+    email = session.get('email')  # Используем email из сессии
+    user_account = UserAccount(email)
+
+    if not user_account.is_token_valid():
+        return flask.redirect('authorize')
+
+    dictionaries = user_account.load_dictionaries()
+
+    # Получаем существующие данные
+    patients = set(dictionaries.get("patients", []))
+    subjects = set(dictionaries.get("subjects", []))
+    cities = set(dictionaries.get("cities", []))
+
+    # Получаем выбранные и новые значения
+    selected_patient = request.form.get("patient")
+    new_patients = request.form.getlist("new_patient[]")
+
+    selected_subject = request.form.get("subject")
+    new_subjects = request.form.getlist("new_subject[]")
+
+    selected_city = request.form.get("city")
+    new_cities = request.form.getlist("new_city[]")
+
+    logger.info(f"Значения с формы ведения справочников получены: {new_patients}, {new_subjects}, {new_cities}")
+    # Добавляем новые значения, если они введены
+    patients.update(filter(None, new_patients))
+    subjects.update(filter(None, new_subjects))
+    cities.update(filter(None, new_cities))
+
+    if selected_patient:
+        patients.add(selected_patient)
+    if selected_subject:
+        subjects.add(selected_subject)
+    if selected_city:
+        cities.add(selected_city)
+
+    # Обновляем справочник и сохраняем
+    updated_data = {
+        "patients": list(patients),
+        "subjects": list(subjects),
+        "cities": list(cities)
+    }
+    logger.info('Updated data: %s', updated_data)
+    user_account.save_dictionaries(updated_data)
+
+    return redirect("/")  # Перенаправляем пользователя обратно на форму
 
 
 if __name__ == '__main__':

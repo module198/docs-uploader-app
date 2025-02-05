@@ -1,3 +1,5 @@
+import configparser
+
 import requests, json
 from google.oauth2.credentials import Credentials
 import os
@@ -19,17 +21,15 @@ SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly',
           'https://www.googleapis.com/auth/spreadsheets']
 
 # Путь к корневой директории сервиса
-# BASE_DIR = os.getenv("BASE_DIR", os.path.abspath(os.path.dirname(__file__)))
 BASE_DIR = os.getenv("BASE_DIR", os.path.abspath(os.path.dirname(__file__)))
 # Путь к папке shared
-# SHARED_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', 'shared'))
 SHARED_DIR = os.getenv("SHARED_DIR", os.path.abspath(os.path.join(BASE_DIR, '..', 'shared')))
 # Путь к логам
 LOG_PATH = os.path.join(SHARED_DIR, 'logs', 'app.log')
-# Путь к файлу с секретами
+# Путь к файлу с секретами и конфигу
 CLIENT_SECRETS_FILE = os.path.join(SHARED_DIR, 'creds', 'client_secret.json')
+dictionaries_file = os.path.join(SHARED_DIR, 'creds', 'dictionaries.json')
 # Путь к .env файлу внутри папки creds
-# dotenv_path = os.path.join(BASE_DIR, '..', '.env')
 dotenv_path = '/app/.env'
 # Путь к папке для временного хранилища файлов для загрузки
 UPLOAD_FOLDER = os.path.join(SHARED_DIR, 'uploads')
@@ -76,6 +76,7 @@ class UserAccount:
         self.email = email
         self.credentials_file = os.path.join(SHARED_DIR, 'creds', 'tokens.json')
         self.credentials = self.load_credentials()
+        self.dictionaries = dictionaries_file
 
     def load_credentials(self):
         """Загружает credentials из файла, если они существуют."""
@@ -183,3 +184,37 @@ class UserAccount:
             self.credentials = None  # Убираем токены из объекта
             return True
         return False
+
+
+    def load_dictionaries(self):
+        """Загружает справочники из файла, если они существуют."""
+        if os.path.exists(self.dictionaries):
+            try:
+                with open(self.dictionaries, 'r', encoding="utf-8") as file:
+                    data = json.load(file)
+                    return data.get(self.email, {})  # Вернем данные для учетной записи или пустой словарь
+            except (json.JSONDecodeError, IOError) as e:
+                logger.exception(f"Ошибка при загрузке справочников: {e}")
+                return None
+        return None
+
+
+    def save_dictionaries(self, dictionaries):
+        """Сохраняет справочники в файл, обновляя данные только для текущей учетной записи."""
+        try:
+            # Загружаем текущие данные из файла (если он существует)
+            data = {}
+            if os.path.exists(self.dictionaries):
+                with open(self.dictionaries, 'r', encoding="utf-8") as file:
+                    data = json.load(file)
+
+            # Обновляем справочник только для текущей учетной записи
+            data[self.email] = dictionaries
+
+            # Записываем обновленный JSON обратно в файл
+            with open(self.dictionaries, 'w', encoding="utf-8") as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+
+            logger.info(f"Справочники для {self.email} успешно сохранены.")
+        except (json.JSONDecodeError, IOError) as e:
+            logger.exception(f"Ошибка при сохранении справочников: {e}")
