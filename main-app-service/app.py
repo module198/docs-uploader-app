@@ -90,20 +90,22 @@ def form():
     if user_account.is_token_valid() or user_account.refresh_token():
         # Если пользователь авторизован, перенаправляем на форму проверяем токен
         dictionaries = user_account.load_dictionaries()
-        patients = dictionaries.get('patients')
-        subjects = dictionaries.get('subjects')
-        cities = dictionaries.get('cities')
+        patients = dictionaries.get('patients', [])
+        subjects = dictionaries.get('subjects', [])
+        cities = dictionaries.get('cities', [])
 
         # Определяем, с какого устройства зашёл пользователь
         user_agent = request.user_agent.string.lower()
         if any(keyword in user_agent for keyword in ("mobile", "android", "iphone")):
-            return render_template('form_mobile.html', email=user_account.email,
+            return render_template('form_mobile.html',
+                                   email=user_account.email,
                                    patients=patients,
                                    subjects=subjects,
                                    cities=cities)
 
         else:
-            return render_template('form_pc.html', email=user_account.email,
+            return render_template('form_pc.html',
+                                   email=user_account.email,
                                    patients=patients,
                                    subjects=subjects,
                                    cities=cities)
@@ -294,4 +296,4 @@ def save_dictionaries_to_file():
 if __name__ == '__main__':
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
     os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
-    app.run('0.0.0.0', 8080, debug=True)
+    app.run('0.0.0.0', 8080, debug=False)
