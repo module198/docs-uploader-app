@@ -8,13 +8,11 @@ from rabbit_publish import Publisher
 import json
 
 app = Flask(__name__)
-# Note: A secret key is included in the sample so that it works.
-# If you use this code in your application, replace this with a truly secret
-# key. See https://flask.palletsprojects.com/quickstart/#sessions.
-app.secret_key = 'REPLACE ME - this value is here as a placeholder.'
+app.secret_key = os.urandom(24)
 
 # Указываем путь для временного сохранения файлов
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 # Создаём директорию, если её не существует
 if not os.path.exists(UPLOAD_FOLDER):
@@ -28,7 +26,7 @@ def index():
         return redirect(url_for('form'))
     else:
         # Если пользователь не авторизован, перенаправляем на страницу логина
-        print("Токен не валиден")
+        logger.info("Токен не валиден")
         # Если есть токены в файле, рефрешим их
         if user_account.credentials:
             user_account.refresh_token()
@@ -154,8 +152,9 @@ def upload():
             # Формируем путь подпапки для пользователя
             user_folder = os.path.join(app.config['UPLOAD_FOLDER'], username)
             # Создаем папку пользователя, если её не существует
-            if not os.path.exists(user_folder):
-                os.makedirs(user_folder)
+            os.makedirs(user_folder, exist_ok=True)
+            # if not os.path.exists(user_folder):
+            #     os.makedirs(user_folder)
             # Сохраняем каждый файл во временную папку
             temp_filepath = os.path.join(user_folder, file.filename)
             file.save(temp_filepath)
@@ -179,9 +178,11 @@ def upload():
 
     except Exception as e:
         # Логирование ошибки
-        logger.exception('Failed to send message to RabbitMQ: %s', str(e))
+        # logger.exception('Failed to send message to RabbitMQ: %s', str(e))
+        logger.exception('Failed to send message to RabbitMQ: %s, user: %s, data: %s', str(e), user_account.email,
+                         form_data)
 
-        flash('Something went wrong, please try later!', 'failure')
+        flash('Something went wrong, please try later. Error: ' + str(e), 'failure')
 
     return redirect(url_for('form'))
 

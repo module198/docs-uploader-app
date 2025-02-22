@@ -1,5 +1,3 @@
-import configparser
-
 import requests, json
 from google.oauth2.credentials import Credentials
 import os
@@ -218,3 +216,4 @@ class UserAccount:
             logger.info(f"Справочники для {self.email} успешно сохранены.")
         except (json.JSONDecodeError, IOError) as e:
             logger.exception(f"Ошибка при сохранении справочников: {e}")
+
