@@ -94,6 +94,20 @@
             box-sizing: border-box;
         }
 
+        .attachment-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .attachment-preview {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .attachment-preview div {
             width: 50px;
             height: 50px;
@@ -109,10 +123,14 @@
             white-space: nowrap;
         }
 
-        .values-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .attachment-button {
+            cursor: pointer;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            text-align: center;
+            width: 50px;
+            height: 50px;
         }
 
         .submit-button {
@@ -126,31 +144,6 @@
 
         .submit-button:hover {
             background-color: #0056b3;
-
-        .submit-button {
-            padding: 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .submit-button:hover {
-            background-color: #0056b3;
-        }
-
-        .add-button {
-            padding: 5px 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .add-button:hover {
-            background-color: #218838;
         }
 
         @media (min-width: 768px) {
@@ -206,71 +199,55 @@
         </div>
 
    <form action="/save_dictionaries_to_file" method="post">
-            <div class="main-form">
-                <!-- Выбор справочника -->
-                <div class="form-row">
-                    <label for="dictionary">Выберите справочник</label>
-                    <select name="dictionary" id="dictionary" onchange="loadValues()">
-                        <option value="patients">Пациенты</option>
-                        <option value="cities">Города</option>
-                        <option value="subjects">Типы событий</option>
-                    </select>
-                </div>
-
-                <!-- Список значений справочника -->
-                <div class="form-row values-container" id="values-container">
-                    <!-- Значения будут загружаться здесь -->
-                </div>
-
-                <!-- Кнопка добавления нового значения -->
-                <button type="button" class="add-button" onclick="addValue()">Добавить новое значение</button>
-
-                <!-- Кнопка сохранения -->
-                <button class="submit-button" type="submit">Сохранить</button>
+    <div class="main-form">
+        <!-- Пациент -->
+        <div class="form-row">
+            <label for="patient">Пациент</label>
+            <select name="patient" id="patient">
+                {% for patient in patients %}
+                    <option value="{{ patient }}">{{ patient }}</option>
+                {% endfor %}
+            </select>
+            <div id="patient-container">
+                <input type="text" name="new_patient[]" placeholder="Добавить нового пациента" onblur="addInputField(this, 'patient-container', 'new_patient[]')">
             </div>
-        </form>
+        </div>
+
+        <!-- Тип события/документа -->
+        <div class="form-row">
+            <label for="subject">Тип события/документа</label>
+            <select name="subject" id="subject">
+                {% for subject in subjects %}
+                    <option value="{{ subject }}">{{ subject }}</option>
+                {% endfor %}
+            </select>
+            <div id="subject-container">
+                <input type="text" name="new_subject[]" placeholder="Добавить новый тип" onblur="addInputField(this, 'subject-container', 'new_subject[]')">
+            </div>
+        </div>
+
+        <!-- Город -->
+        <div class="form-row">
+            <label for="city">Город</label>
+            <select name="city" id="city">
+                {% for city in cities %}
+                    <option value="{{ city }}">{{ city }}</option>
+                {% endfor %}
+            </select>
+            <div id="city-container">
+                <input type="text" name="new_city[]" placeholder="Добавить новый город" onblur="addInputField(this, 'city-container', 'new_city[]')">
+            </div>
+        </div>
+
+        <button class="submit-button" type="submit">Сохранить</button>
+    </div>
+</form>
 
     </div>
 
     <script>
-        const sampleData = {
-            patients: ['Иванов Иван', 'Петров Петр'],
-            cities: ['Москва', 'Санкт-Петербург'],
-            subjects: ['Событие 1', 'Событие 2']
-        };
-
-        function loadValues() {
-            const selectedDictionary = document.getElementById('dictionary').value;
-            const valuesContainer = document.getElementById('values-container');
-            valuesContainer.innerHTML = '';
-
-            sampleData[selectedDictionary].forEach((value, index) => {
-                const div = document.createElement('div');
-                div.classList.add('form-row');
-                div.innerHTML = `
-                    <input type="text" name="${selectedDictionary}[]" value="${value}">
-                    <button type="button" class="delete-button" onclick="deleteValue(${index})">Удалить</button>
-                `;
-                valuesContainer.appendChild(div);
-            });
-        }
-
-        function addValue() {
-            const selectedDictionary = document.getElementById('dictionary').value;
-            const valuesContainer = document.getElementById('values-container');
-            const div = document.createElement('div');
-            div.classList.add('form-row');
-            div.innerHTML = `
-                <input type="text" name="${selectedDictionary}[]" placeholder="Введите новое значение">
-                <button type="button" class="delete-button" onclick="deleteValue()">Удалить</button>
-            `;
-            valuesContainer.appendChild(div);
-        }
-
-        function deleteValue(index) {
-            const selectedDictionary = document.getElementById('dictionary').value;
-            sampleData[selectedDictionary].splice(index, 1);
-            loadValues();
+        function loadFrame(category) {
+            alert(`Load content for: ${category}`);
         }
 
         function redirectToForm() {
@@ -280,6 +257,23 @@
         function redirectToDictionaries() {
             window.location.href = '/dictionaries';
         }
+
+        function addInputField(input, containerId, name) {
+    if (input.value.trim() !== "") {
+        let container = document.getElementById(containerId);
+
+        // Проверяем, есть ли уже пустое поле, если да, не добавляем новое
+        let inputs = container.getElementsByTagName('input');
+        if (inputs[inputs.length - 1].value.trim() !== "") {
+            let newInput = document.createElement("input");
+            newInput.type = "text";
+            newInput.name = name;
+            newInput.placeholder = input.placeholder;
+            newInput.onblur = function() { addInputField(newInput, containerId, name); };
+            container.appendChild(newInput);
+        }
+    }
+}
     </script>
 </body>
 </html>
