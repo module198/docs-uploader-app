@@ -36,7 +36,7 @@
             <label class="dropdown">
                 <span>Тип события:</span>
                 <div class="input-wrapper">
-                    <select name="patient" id="patient" required>
+                    <select name="subject" id="subject" required>
                         {% for subject in subjects %}
                             <option value="{{ subject }}">{{ subject }}</option>
                         {% endfor %}
@@ -48,6 +48,17 @@
                 <span>Дата события:</span>
                 <div class="input-wrapper">
                     <input type="date" name="eventDate" id="eventDate" required>
+                </div>
+            </label>
+
+            <label class="dropdown">
+                <span>Город:</span>
+                <div class="input-wrapper">
+                    <select name="city" id="city" required>
+                        {% for city in cities %}
+                            <option value="{{ city }}">{{ city }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </label>
 
