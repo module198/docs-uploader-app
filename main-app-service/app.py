@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 from rabbit_publish import Publisher
 import json
-
+#teamcity test
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
