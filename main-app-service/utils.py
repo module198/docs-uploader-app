@@ -38,6 +38,7 @@ rabbit_user = os.getenv('RABBITMQ_USER')
 rabbit_pass = os.getenv('RABBITMQ_PASS')
 rabbit_host = os.getenv('RABBITMQ_HOST')
 environment = os.getenv('ENVIRONMENT')
+env_redirect_uri = os.getenv('AUTH_REDIRECT_URI')
 
 # Настройка конфигурации логирования
 logging.basicConfig(

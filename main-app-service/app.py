@@ -44,8 +44,7 @@ def authorize():
     if environment == 'local':
         flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
     elif environment == 'production':
-        flow.redirect_uri = 'https://1300372-cb39260.tw1.ru/oauth2callback'
-
+        flow.redirect_uri = env_redirect_uri
     authorization_url, state = flow.authorization_url(
         # Enable offline access so that you can refresh an access token without
         # re-prompting the user for permission. Recommended for web server apps.
