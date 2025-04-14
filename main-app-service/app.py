@@ -61,7 +61,7 @@ def oauth2callback():
     if environment == 'local':
         flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
     elif environment == 'production':
-        flow.redirect_uri = 'https://1300372-cb39260.tw1.ru/oauth2callback'
+        flow.redirect_uri = env_redirect_uri
 
     # Use the authorization server's response to fetch the OAuth 2.0 tokens.
     authorization_response = flask.request.url
