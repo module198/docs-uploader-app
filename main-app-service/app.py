@@ -3,11 +3,20 @@ from flask import Flask, redirect, url_for, session, request, render_template, f
 import google_auth_oauthlib.flow
 from utils import *
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from rabbit_publish import Publisher
 import json
+from recognition import call_openai_recognition
+from functools import wraps
+
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+
+# Configure session to be persistent
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Session will last for 30 days
+app.config['SESSION_COOKIE_SECURE'] = True  # Only send cookies over HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access to cookies
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent CSRF attacks
 
 # Указываем путь для временного сохранения файлов
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -16,6 +25,16 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Создаём директорию, если её не существует
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_account = UserAccount(session.get('email'))
+        if not (user_account.is_token_valid() or user_account.refresh_token()):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route('/')
 def index():
     user_account = UserAccount(session.get('email'))
@@ -76,38 +95,58 @@ def oauth2callback():
     user_account.credentials =  user_account.load_credentials()
 
     session['email'], session["credentials"] = user_account.email, user_account.credentials_to_dict()
+    session.permanent = True  # Make the session persistent
 
     return flask.redirect('/form')
 
 @app.route('/form')
+@login_required
 def form():
-    # Проверяем наличие и валидность токена авторизации
     user_account = UserAccount(session.get('email'))
-    if user_account.is_token_valid() or user_account.refresh_token():
-        # Если пользователь авторизован, перенаправляем на форму проверяем токен
-        dictionaries = user_account.load_dictionaries()
-        patients = dictionaries.get('patients', [])
-        subjects = dictionaries.get('subjects', [])
-        cities = dictionaries.get('cities', [])
+    dictionaries = user_account.load_dictionaries()
+    patients = dictionaries.get('patients', [])
+    subjects = dictionaries.get('subjects', [])
+    cities = dictionaries.get('cities', [])
 
-        # Определяем, с какого устройства зашёл пользователь
-        user_agent = request.user_agent.string.lower()
-        if any(keyword in user_agent for keyword in ("mobile", "android", "iphone")):
-            return render_template('form_mobile.html',
-                                   email=user_account.email,
-                                   patients=patients,
-                                   subjects=subjects,
-                                   cities=cities)
+    # Предзаполнение
+    prefill = session.pop('recognized_data', None)
 
-        else:
-            return render_template('form_pc.html',
-                                   email=user_account.email,
-                                   patients=patients,
-                                   subjects=subjects,
-                                   cities=cities)
+    if prefill:
+        if prefill.get('patient') and prefill['patient'] not in patients:
+            patients.insert(0, prefill['patient'])
+
+        if prefill.get('subject') and prefill['subject'] not in subjects:
+            subjects.insert(0, prefill['subject'])
+
+        if prefill.get('city') and prefill['city'] not in cities:
+            cities.insert(0, prefill['city'])
+
+        updated_data = {
+            "patients": patients,
+            "subjects": subjects,
+            "cities": cities
+        }
+        logger.info('Updated data from recognition module: %s', updated_data)
+        user_account.save_dictionaries(updated_data)
+
+
+    # Определяем, с какого устройства зашёл пользователь
+    user_agent = request.user_agent.string.lower()
+    if any(keyword in user_agent for keyword in ("mobile", "android", "iphone")):
+        return render_template('form_mobile.html',
+                               email=user_account.email,
+                               patients=patients,
+                               subjects=subjects,
+                               cities=cities,
+                               prefill=prefill)
+
     else:
-        # Если пользователь не авторизован, перенаправляем на страницу логина
-        return redirect(url_for('login'))
+        return render_template('form_pc.html',
+                               email=user_account.email,
+                               patients=patients,
+                               subjects=subjects,
+                               cities=cities,
+                               prefill=prefill)
 
 
 @app.route('/upload', methods=['POST'])
@@ -183,6 +222,29 @@ def upload():
         flash('Something went wrong, please try later. Error: ' + str(e), 'failure')
 
     return redirect(url_for('form'))
+
+
+@app.route('/recognize', methods=['GET', 'POST'])
+def recognize():
+    # Проверяем наличие и валидность токена авторизации
+    user_account = UserAccount(session.get('email'))
+    if user_account.is_token_valid() or user_account.refresh_token():
+        if request.method == 'POST':
+            file = request.files['file']
+
+            # Пример: распознавание файла с помощью OpenAI
+            recognized_data = call_openai_recognition(file)
+
+            # Сохраняем данные в сессии, чтобы они были доступны на /form
+            session['recognized_data'] = recognized_data
+
+            return redirect(url_for('form'))
+
+    else:
+        # Если пользователь не авторизован, перенаправляем на страницу логина
+        return redirect(url_for('login'))
+
+    return render_template('recognize.html')
 
 
 @app.route("/logout")

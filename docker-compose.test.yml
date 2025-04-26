@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  test-main-app:
+    build:
+      context: ./main-app-service  # Контекст сборки для основного сервиса
+    environment:
+      - SHARED_DIR=/app/shared  # Указываем переменную среды для общей папки
+    ports:
+      - "8081:8080"
+    volumes:
+      - ${SHARED_PATH}:/app/shared  # Монтируем общую папку
+      - ${ENV_PATH}:/app/.env  # Монтируем .env
+    depends_on:
+      - test-rabbitmq-server  # Указываем, что main-app зависит от RabbitMQ
+    networks:
+      - test-app-network  # Указываем, что main-app использует общую сеть
+
+  test-rabbitmq-server:
+    hostname: test-rabbitmq-server
+    image: rabbitmq:3-management  # Официальный образ RabbitMQ с UI
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s   # Проверять каждые 5 секунд
+      timeout: 10s   # Таймаут команды
+      retries: 5     # 5 попыток
+    volumes:
+      - ${RABBITMQ_DATA_PATH}:/var/lib/rabbitmq  # Монтируем папку для хранения данных RabbitMQ
+      - ${RABBITMQ_LOGS_PATH}:/var/log/rabbitmq  # Монтируем директорию для логов RabbitMQ
+    ports:
+      - "5673:5672"  # Порт для подключения к RabbitMQ
+      - "15673:15672"  # Порт для RabbitMQ Management UI
+    networks:
+      - test-app-network  # Указываем, что rabbitmq использует общую сеть
+
+  test-init-rabbit:
+    image: rabbitmq:3-management
+    command: >
+      sh -c "
+      rabbitmqadmin declare exchange name=documentInfo type=fanout &&
+      rabbitmqadmin declare queue name=documentQueue durable=true &&
+      rabbitmqadmin declare binding source=documentInfo destination_type=queue destination=documentQueue
+      "
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    depends_on:
+      test-rabbitmq-server:
+        condition: service_healthy  # Убедимся, что RabbitMQ прошёл healthcheck
+    networks:
+      - test-app-network  # Используем ту же сеть
+
+  test-consumer-uploader:
+    build:
+      context: ./consumer-uploader-service  # Контекст сборки для потребителя
+    environment:
+      - SHARED_DIR=/app/shared  # Указываем переменную среды для общей папки
+    volumes:
+      - ${SHARED_PATH}:/app/shared  # Монтируем общую папку
+      - ${ENV_PATH}:/app/.env  # Монтируем .env
+    depends_on:
+      test-init-rabbit:
+        condition: service_started  # Убедимся, что init-rabbit успешно стартовал
+    command: python app-consumer-uploader.py  # Запуск потребителя
+    networks:
+      - test-app-network  # Указываем, что consumer-uploader использует общую сеть
+
+networks:
+  test-app-network:
+    driver: bridge  # Используем мостовую сеть для всех сервисов

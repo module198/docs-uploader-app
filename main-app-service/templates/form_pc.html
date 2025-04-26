@@ -188,7 +188,7 @@
         </div>
         <div class="menu-section">
             <button class="menu-button" onclick="redirectToDictionaries()">Работа со справочниками</button>
-            <button class="menu-button">Func2</button>
+            <button class="menu-button" onclick="window.location.href='/recognize'">Распознать</button>
         </div>
     </div>
 
@@ -210,6 +210,7 @@
                 </div>
 
                 <div class="form-row">
+{#                    <label for="event-type">Тип события/документа</label>#}
                     <label for="event-type">Тип события/документа</label>
                     <select name="subject" id="subject" required>
                         {% for subject in subjects %}
@@ -293,6 +294,27 @@
 
         function redirectToForm() {
             window.location.href = '/form';
+        }
+
+        function setValueIfExists(id, value) {
+	        const el = document.getElementById(id);
+	        if (el && value) {
+		        el.value = value;
+	        }
+        }
+        window.onload = function() {
+            const prefill = {{ prefill | tojson | safe }};
+            if (prefill) {
+                setValueIfExists("eventDate", prefill.eventDate);
+                setValueIfExists("clinic", prefill.clinic);
+                setValueIfExists("doctorSpec", prefill.doctorSpec);
+                setValueIfExists("doctorName", prefill.doctorName);
+                setValueIfExists("diagnosis", prefill.diagnosis);
+                setValueIfExists("comment", prefill.comment);
+                setValueIfExists("city", prefill.city);
+                setValueIfExists("subject", prefill.subject);
+                setValueIfExists("patient", prefill.patient);
+            }
         }
     </script>
 </body>
