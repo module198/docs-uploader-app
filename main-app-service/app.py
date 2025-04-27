@@ -10,7 +10,7 @@ from recognition import call_openai_recognition
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = secret_key
 
 # Configure session to be persistent
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Session will last for 30 days
