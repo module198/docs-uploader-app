@@ -24,7 +24,7 @@ class Consumer:
                 rabbit_credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
                 logger.info('Connecting to RabbitMQ: {}'.format(rabbit_host), rabbit_user, rabbit_pass)
                 self.connection = pika.BlockingConnection(
-                    pika.ConnectionParameters(rabbit_host, rabbit_port, '/', rabbit_credentials)
+                    pika.ConnectionParameters(rabbit_host, 5672, '/', rabbit_credentials)
                 )
                 self.channel = self.connection.channel()
                 logger.info('Connected to RabbitMQ: {}'.format(rabbit_host))

@@ -7,7 +7,7 @@ class Publisher:
         rabbitCredentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
         logger.info('Connecting to RabbitMQ: {}'.format(rabbit_host), rabbit_user, rabbit_pass)
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(rabbit_host,
-                                                                            rabbit_port,
+                                                                            5672,
                                                                             '/', rabbitCredentials))
         self.channel = self.connection.channel()
 
