@@ -62,7 +62,7 @@ def authorize():
         CLIENT_SECRETS_FILE, scopes=SCOPES)
     if environment == 'local':
         flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
-    elif environment == 'production':
+    elif environment == 'production' or environment == 'test':
         flow.redirect_uri = env_redirect_uri
     authorization_url, state = flow.authorization_url(
         # Enable offline access so that you can refresh an access token without
@@ -79,7 +79,7 @@ def oauth2callback():
         CLIENT_SECRETS_FILE, scopes=SCOPES)
     if environment == 'local':
         flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
-    elif environment == 'production':
+    elif environment == 'production' or environment == 'test':
         flow.redirect_uri = env_redirect_uri
 
     # Use the authorization server's response to fetch the OAuth 2.0 tokens.
