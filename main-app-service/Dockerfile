@@ -13,8 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копируем все файлы приложения в контейнер
 COPY . .
 
-# Указываем команду для запуска приложения
-CMD ["python", "app.py"]
+# Указываем команду запуска через gunicorn
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "app:app"]
 
 # Открываем порт 5000 для доступа к приложению
-EXPOSE 5000
+EXPOSE 8080

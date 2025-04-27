@@ -21,6 +21,9 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent CSRF attacks
 # Указываем путь для временного сохранения файлов
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+
 
 # Создаём директорию, если её не существует
 if not os.path.exists(UPLOAD_FOLDER):
@@ -352,9 +355,3 @@ def save_dictionaries_to_file():
     user_account.save_dictionaries(updated_data)
 
     return redirect("/")  # Перенаправляем пользователя обратно на форму
-
-
-if __name__ == '__main__':
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-    os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
-    app.run('0.0.0.0', 8080, debug=False)
