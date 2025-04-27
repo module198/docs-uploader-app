@@ -1,5 +1,5 @@
 import pika
-from utils import rabbit_user, rabbit_pass, rabbit_host, logger
+from utils import *
 
 class Publisher:
     def __init__(self, exchange_name='documentInfo'):
@@ -7,7 +7,7 @@ class Publisher:
         rabbitCredentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
         logger.info('Connecting to RabbitMQ: {}'.format(rabbit_host), rabbit_user, rabbit_pass)
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(rabbit_host,
-                                                                            5672,
+                                                                            rabbit_port,
                                                                             '/', rabbitCredentials))
         self.channel = self.connection.channel()
 

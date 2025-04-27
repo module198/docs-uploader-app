@@ -23,6 +23,7 @@ load_dotenv(dotenv_path)
 rabbit_user = os.getenv('RABBITMQ_USER')
 rabbit_pass = os.getenv('RABBITMQ_PASS')
 rabbit_host = os.getenv('RABBITMQ_HOST')
+rabbit_port = os.getenv('RABBITMQ_PORT')
 
 # Настройка конфигурации логирования
 logging.basicConfig(
