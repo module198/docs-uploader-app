@@ -8,6 +8,7 @@ from rabbit_publish import Publisher
 import json
 from recognition import call_openai_recognition
 from functools import wraps
+from pi_api_request import call_openai_recognition
 
 app = Flask(__name__)
 app.secret_key = secret_key
@@ -236,8 +237,8 @@ def recognize():
             file = request.files['file']
 
             # Пример: распознавание файла с помощью OpenAI
+            # recognized_data = call_openai_recognition(file)
             recognized_data = call_openai_recognition(file)
-
             # Сохраняем данные в сессии, чтобы они были доступны на /form
             session['recognized_data'] = recognized_data
 

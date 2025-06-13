@@ -8,6 +8,7 @@ rabbit/
 .env
 temp/
 .git
+.idea
 
 
 consumer-uploader-service/.idea/

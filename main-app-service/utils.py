@@ -41,6 +41,8 @@ rabbit_port = os.getenv('RABBITMQ_PORT')
 environment = os.getenv('ENVIRONMENT')
 env_redirect_uri = os.getenv('AUTH_REDIRECT_URI')
 api_key = os.getenv('OPENAI_API_KEY')
+pi_api_key = os.getenv('PI_API_KEY')
+pi_api_url = os.getenv('PI_API_URL')
 secret_key = os.getenv('SECRET_KEY')
 
 # Настройка конфигурации логирования

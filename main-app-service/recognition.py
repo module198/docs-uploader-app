@@ -44,6 +44,7 @@ def call_openai_recognition(file):
             logger.info('Recognized data: %s', response_dict)
         else:
             logger.info("Не удалось найти JSON в ответе.")
+            response_dict = {}
 
         return response_dict
     except Exception as e:
