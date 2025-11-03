@@ -8,7 +8,6 @@ from rabbit_publish import Publisher
 import json
 from recognition import call_openai_recognition
 from functools import wraps
-from pi_api_request import call_openai_recognition
 
 app = Flask(__name__)
 app.secret_key = secret_key
@@ -116,6 +115,24 @@ def form():
     prefill = session.pop('recognized_data', None)
 
     if prefill:
+        # Convert eventDate to YYYY-MM-DD format if it exists and is not already in that format
+        if prefill.get('eventDate'):
+            try:
+                # Assuming the recognized date is in DD.MM.YYYY or similar, convert it
+                # This needs to be robust to various date formats that might come from recognition
+                # For now, let's assume it's either DD.MM.YYYY or YYYY-MM-DD
+                # We try DD.MM.YYYY first, then YYYY-MM-DD
+                try:
+                    # Try parsing as DD.MM.YYYY
+                    dt_object = datetime.strptime(prefill['eventDate'], '%d.%m.%Y')
+                except ValueError:
+                    # If that fails, try parsing as YYYY-MM-DD
+                    dt_object = datetime.strptime(prefill['eventDate'], '%Y-%m-%d')
+                prefill['eventDate'] = dt_object.strftime('%Y-%m-%d')
+            except ValueError:
+                logger.warning(f"Could not parse eventDate: {prefill['eventDate']}")
+                prefill['eventDate'] = None # Set to None if parsing fails to avoid invalid date in HTML
+
         if prefill.get('patient') and prefill['patient'] not in patients:
             patients.insert(0, prefill['patient'])
 
@@ -237,8 +254,8 @@ def recognize():
             file = request.files['file']
 
             # Пример: распознавание файла с помощью OpenAI
-            # recognized_data = call_openai_recognition(file)
             recognized_data = call_openai_recognition(file)
+
             # Сохраняем данные в сессии, чтобы они были доступны на /form
             session['recognized_data'] = recognized_data
 
